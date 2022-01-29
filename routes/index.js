@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const axios = require('axios');
 const protobuf = require("protobufjs");
+const { getStationData } = require("../data/stations");
 
 const nyctSubwayProtoRoot = protobuf.loadSync(path.join(__dirname, '../proto/nyct-subway.proto'));
 const FeedMessage = nyctSubwayProtoRoot.lookupType("transit_realtime.FeedMessage");
@@ -25,11 +26,14 @@ router.get('/', async (req, res) => {
       },
     });
 
-    console.log("Received a response!")
-    const responseData = response.data;
+    const decoded = FeedMessage.decode(Buffer.from(response.data));
+    const object = FeedMessage.toObject(decoded, {
+      longs: String,
+      enums: String,
+      bytes: String,
+    });
 
-    const decoded = FeedMessage.decode(new Uint8Array(responseData));
-    console.log(decoded.entity)
+    console.log(getStationData('M18'))
   } catch (error) {
     console.log("Error processing request", error);
     return res.status(400).send({ error });

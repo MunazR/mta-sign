@@ -11,8 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.25.0",
+    "csv": "^6.0.5",
     "dotenv": "^14.3.2",
     "express": "^4.17.2",
+    "fs": "^0.0.1-security",
     "path": "^0.12.7",
     "protobufjs": "^6.11.2"
   }
