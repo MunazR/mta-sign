@@ -1,27 +1,10 @@
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
-const PROTO_PATH = __dirname + '/../proto/gtfs-realtime.proto';
-const API_KEY = 'dKCTzqLlDw8nrx5ZcQfM73vkNqdoxIQPazUtoGVo';
-
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-});
-
-const transitProto = grpc.loadPackageDefinition(packageDefinition).transit_realtime;
-
-const metadata = new grpc.Metadata();
-metadata.add('x-api-key', API_KEY);
-const credentials = grpc.credentials.createFromMetadataGenerator(metadata);
-// console.log(transitProto.FeedMessage)
-// const client = new transitProto.VehicleDescriptor('https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm', credentials);
-
+const path = require('path');
 const express = require('express');
 const axios = require('axios');
-const res = require('express/lib/response');
+const protobuf = require("protobufjs");
+
+const nyctSubwayProtoRoot = protobuf.loadSync(path.join(__dirname, '../proto/nyct-subway.proto'));
+const FeedMessage = nyctSubwayProtoRoot.lookupType("transit_realtime.FeedMessage");
 
 const router = express.Router();
 
@@ -36,13 +19,19 @@ router.get('/', async (req, res) => {
     const response = await axios({
       method: 'get',
       url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+      responseType: 'arraybuffer',
       headers: {
-        'x-api-key': API_KEY,
+        'x-api-key': process.env.MTA_API_KEY,
       },
     });
 
-    console.log(response.data)
+    console.log("Received a response!")
+    const responseData = response.data;
+
+    const decoded = FeedMessage.decode(new Uint8Array(responseData));
+    console.log(decoded.entity)
   } catch (error) {
+    console.log("Error processing request", error);
     return res.status(400).send({ error });
   }
 
