@@ -1,7 +1,26 @@
-import logo from './logo.svg';
 import './App.css';
 
-function App() {
+import { useEffect, useState } from 'react';
+
+import logo from './logo.svg';
+
+const App = () => {
+
+  const [data, setData] = useState(null);
+
+  const refreshData = async () => {
+    fetch('http://localhost:3000/data')
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      });
+  };
+
+  useEffect(() => {
+    refreshData();
+    setInterval(refreshData, 60 * 1000)
+  }, []);
+
   return (
     <div className="App">
       <header className="App-header">
