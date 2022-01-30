@@ -2,17 +2,18 @@ import './App.css';
 
 import { useEffect, useState } from 'react';
 
-import logo from './logo.svg';
+import Direction from './Direction';
+import TrainArrival from './TrainArrival';
 
 const App = () => {
-
   const [data, setData] = useState(null);
+  const now = new Date();
 
   const refreshData = async () => {
     fetch('http://localhost:3000/data')
       .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
+      .then((response) => {
+        setData(response);
       });
   };
 
@@ -21,22 +22,40 @@ const App = () => {
     setInterval(refreshData, 60 * 1000)
   }, []);
 
+  if (!data) {
+    return <p>Loading...</p>;
+  }
+
+  const { stopTimeUpdates, stations } = data;
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {
+        Object.keys(stopTimeUpdates).sort().map((stop) => {
+          const updates = stopTimeUpdates[stop];
+          const station = stations[stop.substring(0, 3)];
+          const direction = stop.charAt(stop.length - 1);
+
+          const stationLabel = direction === 'N' ? station['North Direction Label'] : station['South Direction Label'];
+
+          return (
+            <div key={stop}>
+              <Direction label={stationLabel} />
+              {
+                updates.slice(0, 4).map((update) =>
+                  <TrainArrival
+                    key={update.id}
+                    route={update.routeId}
+                    label={station['Line']}
+                    now={now}
+                    arrivalTime={update.arrivalTime}
+                  />
+                )
+              }
+            </div>
+          );
+        })
+      }
     </div>
   );
 }

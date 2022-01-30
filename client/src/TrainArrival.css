@@ -1,0 +1,24 @@
+.TrainArrival {
+  display: flex;
+  flex-direction: row;
+  margin: 1pt 16pt;
+  align-items: center;
+}
+
+.TrainArrival-route {
+  margin-right: 4pt;
+  color: #ffffff;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 50%;
+  height: 2em;
+  width: 2em;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.TrainArrival-label {
+  flex: 1;
+}
