@@ -38,7 +38,7 @@ const TrainArrival = ({ route, label, now, arrivalTimes }) => {
   const routeColor = colorForRoute(route);
   const timeLabel = arrivalTimes
     .slice(0, 3)
-    .map((arrivalTime) => `${Math.round((arrivalTime - Math.round(now.valueOf() / 1000)) / 60)} min`)
+    .map((arrivalTime) => `${Math.floor((arrivalTime - Math.round(now.valueOf() / 1000)) / 60)} min`)
     .join(', ')
 
   return (
