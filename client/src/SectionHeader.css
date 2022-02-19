@@ -1,9 +1,9 @@
-.Direction {
+.SectionHeader {
   background-color: #000000;
   padding: 1pt 16pt;
 }
 
-.Direction-label {
+.SectionHeader-label {
   font-size: 14pt;
   font-weight: bold;
   color: #ffffff;

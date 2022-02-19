@@ -2,11 +2,15 @@ import './App.css';
 
 import { useEffect, useState } from 'react';
 
-import Station from './Station';
+import Headline from './Headline';
+import SectionHeader from './SectionHeader';
 import TrainArrival from './TrainArrival';
 
 const App = () => {
   const [data, setData] = useState(null);
+  const [newsData, setNewsData] = useState(null);
+  const [newsIndex, setNewsIndex] = useState(0);
+
   const now = new Date();
   const unixNow = Math.round(now.valueOf() / 1000);
 
@@ -18,9 +22,37 @@ const App = () => {
       });
   };
 
+  const refreshNewsData = async () => {
+    fetch('https://rss.nytimes.com/services/xml/rss/nyt/US.xml')
+      .then((response) => response.text())
+      .then(str => new window.DOMParser().parseFromString(str, "text/html"))
+      .then((data) => {
+        const items = data.querySelectorAll("item");
+        const titles = []
+        items.forEach((item) => { titles.push(item.querySelector("title").innerHTML) });
+        setNewsData(titles);
+      });
+  };
+
+  const refreshNewsIndex = () => {
+    if (newsData === null)
+      return;
+
+    const newIndex = newsIndex + 1;
+    if (newIndex >= newsData.length) {
+      setNewsIndex(0);
+    } else {
+      setNewsIndex(newIndex);
+    }
+  }
+
   useEffect(() => {
     refreshData();
-    setInterval(refreshData, 60 * 1000)
+    refreshNewsData();
+
+    setInterval(refreshData, 60 * 1000);
+    setInterval(refreshNewsData, 60 * 60 * 1000);
+    setInterval(refreshNewsIndex, 30 * 1000);
   }, []);
 
   if (!data) {
@@ -32,7 +64,7 @@ const App = () => {
 
   return (
     <div className="App">
-      <Station label={stopNames.join(', ')} />
+      <SectionHeader label={stopNames.join(', ')} />
       {
         Object.keys(stopTimeUpdates)
           .sort().map((stop) => {
@@ -58,7 +90,6 @@ const App = () => {
 
             return (
               <div key={stop}>
-                {/* <Direction label={stationLabel} /> */}
                 {
                   Object
                     .keys(routeUpdates)
@@ -77,6 +108,9 @@ const App = () => {
             );
           })
       }
+      <SectionHeader label="Weather" />
+      <SectionHeader label="NYT - US News" />
+      {newsData && newsData[newsIndex] && <Headline title={newsData[newsIndex]} />}
     </div>
   );
 }
