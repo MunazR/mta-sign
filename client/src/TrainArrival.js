@@ -34,10 +34,12 @@ const colorForRoute = (route) => {
   }
 }
 
-const TrainArrival = ({ route, label, now, arrivalTime }) => {
+const TrainArrival = ({ route, label, now, arrivalTimes }) => {
   const routeColor = colorForRoute(route);
-
-  const minutes = Math.round((arrivalTime - Math.round(now.valueOf() / 1000)) / 60);
+  const timeLabel = arrivalTimes
+    .slice(0, 3)
+    .map((arrivalTime) => `${Math.round((arrivalTime - Math.round(now.valueOf() / 1000)) / 60)} min`)
+    .join(', ')
 
   return (
     <div className="TrainArrival">
@@ -45,7 +47,7 @@ const TrainArrival = ({ route, label, now, arrivalTime }) => {
         <p>{route}</p>
       </div>
       <p className="TrainArrival-label">{label}</p>
-      <p className="TrainArrival-time">{minutes} min</p>
+      <p className="TrainArrival-time">{timeLabel}</p>
     </div >
   );
 };

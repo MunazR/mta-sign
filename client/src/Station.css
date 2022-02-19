@@ -1,0 +1,10 @@
+.Station {
+  background-color: #000000;
+  padding: 1pt 16pt;
+}
+
+.Station-label {
+  font-size: 14pt;
+  font-weight: bold;
+  color: #ffffff;
+}
