@@ -28,7 +28,7 @@ const App = () => {
       .then(str => new window.DOMParser().parseFromString(str, "text/html"))
       .then((data) => {
         const items = data.querySelectorAll("item");
-        const titles = []
+        const titles = [];
         items.forEach((item) => { titles.push(item.querySelector("title").innerHTML) });
         setNewsData(titles);
       });
@@ -52,7 +52,7 @@ const App = () => {
 
     setInterval(refreshData, 60 * 1000);
     setInterval(refreshNewsData, 60 * 60 * 1000);
-    setInterval(refreshNewsIndex, 30 * 1000);
+    setInterval(refreshNewsIndex, 10 * 1000);
   }, []);
 
   if (!data) {
