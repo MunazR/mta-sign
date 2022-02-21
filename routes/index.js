@@ -95,4 +95,23 @@ router.get('/data', async (req, res) => {
   }
 });
 
+router.get('/weather', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    const response = await axios({
+      method: 'get',
+      url: `https://api.openweathermap.org/data/2.5/onecall`,
+      params: {
+        appid: process.env.WEATHER_API_KEY,
+        lat,
+        lon,
+      },
+    });
+
+    return res.json(response.data);
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
 module.exports = router;
