@@ -1,0 +1,34 @@
+.Weather-row {
+  margin: 8px 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.Weather-box {
+  text-align: center;
+  margin: 0px 8px;
+}
+
+.Weather-header {
+  font-size: 12pt;
+}
+
+.Weather-precipitation {
+  font-size: 8pt;
+}
+
+.Weather-temp {
+  font-size: 22pt;
+}
+
+.Weather-minMax {
+  font-size: 12pt;
+}
+
+.Weather-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: fill;
+}

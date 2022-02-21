@@ -4,22 +4,22 @@ import { useEffect, useState } from 'react';
 
 import Headline from './Headline';
 import SectionHeader from './SectionHeader';
-import TrainArrival from './TrainArrival';
+import Transit from './Transit';
+import Weather from './Weather';
+
+const LAT = 40.7174923;
+const LON = -73.9848778;
 
 const App = () => {
   const [data, setData] = useState(null);
   const [newsData, setNewsData] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
   const [newsIndex, setNewsIndex] = useState(0);
-
-  const now = new Date();
-  const unixNow = Math.round(now.valueOf() / 1000);
 
   const refreshData = async () => {
     fetch('http://localhost:3000/data')
       .then((response) => response.json())
-      .then((response) => {
-        setData(response);
-      });
+      .then(setData);
   };
 
   const refreshNewsData = async () => {
@@ -32,6 +32,12 @@ const App = () => {
         items.forEach((item) => { titles.push(item.querySelector("title").innerHTML) });
         setNewsData(titles);
       });
+  };
+
+  const refreshWeatherData = async () => {
+    fetch(`http://localhost:3000/weather?lat=${encodeURIComponent(LAT)}&lon=${encodeURIComponent(LON)}`,)
+      .then((response) => response.json())
+      .then(setWeatherData);
   };
 
   const refreshNewsIndex = () => {
@@ -49,66 +55,22 @@ const App = () => {
   useEffect(() => {
     refreshData();
     refreshNewsData();
+    refreshWeatherData();
 
     setInterval(refreshData, 60 * 1000);
     setInterval(refreshNewsData, 60 * 60 * 1000);
     setInterval(refreshNewsIndex, 10 * 1000);
+    setInterval(refreshWeatherData, 5 * 60 * 1000);
   }, []);
 
   if (!data) {
     return <p>Loading...</p>;
   }
 
-  const { stopTimeUpdates, stations } = data;
-  const stopNames = [... new Set(Object.keys(stations).map((stationId) => stations[stationId]['Stop Name']))];
-
   return (
     <div className="App">
-      <SectionHeader label={stopNames.join(', ')} />
-      {
-        Object.keys(stopTimeUpdates)
-          .sort().map((stop) => {
-            const updates = stopTimeUpdates[stop];
-            const station = stations[stop.substring(0, 3)];
-            const direction = stop.charAt(stop.length - 1);
-
-            const directionLabel = direction === 'N' ? station['North Direction Label'] : station['South Direction Label'];
-
-            const routeUpdates = updates
-              .filter((update) => update.arrivalTime >= unixNow && update.arrivalTime <= unixNow + 60 * 30)
-              .reduce((group, update) => {
-                const { routeId } = update;
-
-                return {
-                  ...group,
-                  [routeId]: [
-                    ...(group[routeId] ?? []),
-                    update,
-                  ],
-                }
-              }, {})
-
-            return (
-              <div key={stop}>
-                {
-                  Object
-                    .keys(routeUpdates)
-                    .sort()
-                    .map((routeId) =>
-                      <TrainArrival
-                        key={`${direction}-${routeId}`}
-                        route={routeId}
-                        label={directionLabel}
-                        now={now}
-                        arrivalTimes={routeUpdates[routeId].map((update) => update.arrivalTime)}
-                      />
-                    )
-                }
-              </div>
-            );
-          })
-      }
-      <SectionHeader label="Weather" />
+      <Transit data={data} />
+      {weatherData && <Weather data={weatherData} />}
       <SectionHeader label="NYT - US News" />
       {newsData && newsData[newsIndex] && <Headline title={newsData[newsIndex]} />}
     </div>

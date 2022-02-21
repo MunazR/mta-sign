@@ -103,6 +103,7 @@ router.get('/weather', async (req, res) => {
       url: `https://api.openweathermap.org/data/2.5/onecall`,
       params: {
         appid: process.env.WEATHER_API_KEY,
+        units: 'metric',
         lat,
         lon,
       },
