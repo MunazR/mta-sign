@@ -1,12 +1,32 @@
-import TrainArrival from './TrainArrival';
-import SectionHeader from './SectionHeader';
+import { useEffect, useState } from 'react';
 
-const Transit = ({ data }) => {
+import SectionHeader from './SectionHeader';
+import TrainArrival from './TrainArrival';
+
+const Transit = () => {
+  const [data, setData] = useState(null);
   const now = new Date();
   const unixNow = Math.round(now.valueOf() / 1000);
 
+  const refreshData = async () => {
+    fetch('http://localhost:3000/data')
+      .then((response) => response.json())
+      .then(setData)
+      .catch(console.error);
+  };
+
+  useEffect(() => {
+    refreshData();
+    const interval = setInterval(refreshData, 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!data) {
+    return null;
+  }
+
   const { stopTimeUpdates, stations } = data;
-  const stopNames = [... new Set(Object.keys(stations).map((stationId) => stations[stationId]['Stop Name']))];
+  const stopNames = [...new Set(Object.keys(stations).map((stationId) => stations[stationId]['Stop Name']))];
 
   return (
     <>
