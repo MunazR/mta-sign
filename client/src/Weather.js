@@ -73,7 +73,7 @@ const Weather = () => {
                   <div className="Weather-header">{WEEKDAY[date.getDay()]}</div>
                   <div className="Weather-minMax">{toPrettyCelsius(day['temp']['min'])}/{toPrettyCelsius(day['temp']['max'])}</div>
                   <img className="Weather-icon" src={`http://openweathermap.org/img/wn/${weather['icon']}@2x.png`} alt={weather['description']} />
-                  <div className="Weather-precipitation">Precipitation {day['pop'] * 100}%</div>
+                  <div className="Weather-precipitation">Precipitation {Math.round(day['pop'] * 100)}%</div>
                   {day['rain'] && <div className="Weather-precipitation">Rain {day['rain']}mm</div>}
                   {day['snow'] && <div className="Weather-precipitation">Snow {day['snow']}mm</div>}
                 </div>
