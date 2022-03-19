@@ -1,0 +1,12 @@
+.DateTime {
+  background-color: #000000;
+  padding: 1pt 16pt;
+}
+
+.DateTime-text {
+  font-size: 18pt;
+  font-weight: bold;
+  text-align: center;
+  line-height: 150%;
+  color: #ffffff;
+}

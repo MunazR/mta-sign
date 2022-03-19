@@ -41,8 +41,7 @@ const TrainArrival = ({ route, label, now, arrivalTimes }) => {
     .map((arrivalTime) => `${Math.floor((arrivalTime - Math.round(now.valueOf() / 1000)) / 60)} min`)
     .join(', ')
 
-  const isExpress = route.charAt(1) === 'X';
-
+  const isExpress = route.charAt(1).toLowerCase() === 'x';
   return (
     <div className="TrainArrival">
       <div className={`TrainArrival-route ${isExpress ? "TrainArrival-express" : "TrainArrival-bullet"}`} style={{ backgroundColor: routeColor }}>
