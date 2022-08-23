@@ -8,6 +8,6 @@ Displays train times, weather and news.
 @xset -dpms
 @xset s noblank
 # Update to point to your repo.
-@/home/pi/Desktop/mta-sign/mta_sign.sh
+@sh /home/pi/Desktop/mta-sign/mta_sign.sh
 @unclutter -idle 0
 ```
