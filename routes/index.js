@@ -1,76 +1,90 @@
-const path = require('path');
-const express = require('express');
-const axios = require('axios');
+const path = require("path");
+const express = require("express");
+const axios = require("axios");
 const protobuf = require("protobufjs");
 const { getStationData } = require("../data/stations");
 
-const nyctSubwayProtoRoot = protobuf.loadSync(path.join(__dirname, '../proto/nyct-subway.proto'));
-const FeedMessage = nyctSubwayProtoRoot.lookupType("transit_realtime.FeedMessage");
+const nyctSubwayProtoRoot = protobuf.loadSync(
+  path.join(__dirname, "../proto/nyct-subway.proto")
+);
+const FeedMessage = nyctSubwayProtoRoot.lookupType(
+  "transit_realtime.FeedMessage"
+);
 
-const stationIds = process.env.GTFS_STOPS.split(',');
+const stationIds = process.env.GTFS_STOPS.split(",");
 const stationData = stationIds
   .map(getStationData)
-  .reduce((result, station) => ({ ...result, [station['GTFS Stop ID']]: station, }), {});
+  .reduce(
+    (result, station) => ({ ...result, [station["GTFS Stop ID"]]: station }),
+    {}
+  );
 
-const feeds = process.env.FEEDS.split(',');
+const feeds = process.env.FEEDS.split(",");
 
 const router = express.Router();
 
 router.use((req, res, next) => {
   const now = new Date();
-  console.log(`${now.toLocaleString()}:`, `method=${req.method}`, `path=${req.url}`);
+  console.log(
+    `${now.toLocaleString()}:`,
+    `method=${req.method}`,
+    `path=${req.url}`
+  );
   next();
 });
 
-router.get('/data', async (req, res) => {
+router.get("/data", async (req, res) => {
   try {
-    const updatesForStation = await Promise.all(feeds.map(async (feed) => {
-      const response = await axios({
-        method: 'get',
-        url: `https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-${feed}`,
-        responseType: 'arraybuffer',
-        headers: {
-          'x-api-key': process.env.MTA_API_KEY,
-        },
-      });
+    const updatesForStation = await Promise.all(
+      feeds.map(async (feed) => {
+        const response = await axios({
+          method: "get",
+          url: `https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-${feed}`,
+          responseType: "arraybuffer",
+          headers: {
+            "x-api-key": process.env.MTA_API_KEY,
+          },
+        });
 
-      const feedMessage = FeedMessage.toObject(
-        FeedMessage.decode(Buffer.from(response.data)),
-        {
-          longs: String,
-          enums: String,
-          bytes: String,
-        },
-      );
-
-      return feedMessage.entity
-        .map((entity) => {
-          const { tripUpdate, id } = entity;
-          if (!tripUpdate) {
-            return;
+        const feedMessage = FeedMessage.toObject(
+          FeedMessage.decode(Buffer.from(response.data)),
+          {
+            longs: String,
+            enums: String,
+            bytes: String,
           }
+        );
 
-          const { stopTimeUpdate, trip } = tripUpdate;
-          if (!stopTimeUpdate || !trip) {
-            return;
-          }
+        return feedMessage.entity
+          .map((entity) => {
+            const { tripUpdate, id } = entity;
+            if (!tripUpdate) {
+              return;
+            }
 
-          const stop = stopTimeUpdate
-            .find((update) => stationIds.some((id) => id === update.stopId.substring(0, 3)));
+            const { stopTimeUpdate, trip } = tripUpdate;
+            if (!stopTimeUpdate || !trip) {
+              return;
+            }
 
-          if (!stop) {
-            return;
-          }
+            const stop = stopTimeUpdate.find((update) =>
+              stationIds.some((id) => id === update.stopId.substring(0, 3))
+            );
 
-          return {
-            id,
-            arrivalTime: stop.arrival.time,
-            stopId: stop.stopId,
-            routeId: trip.routeId,
-          };
-        })
-        .filter((update) => Boolean(update))
-    }));
+            if (!stop) {
+              return;
+            }
+
+            return {
+              id,
+              arrivalTime: stop.arrival.time,
+              stopId: stop.stopId,
+              routeId: trip.routeId,
+            };
+          })
+          .filter((update) => Boolean(update));
+      })
+    );
 
     const stopTimeUpdates = updatesForStation
       .flat()
@@ -79,10 +93,7 @@ router.get('/data', async (req, res) => {
         const stopId = update.stopId;
         return {
           ...result,
-          [stopId]: [
-            ...(result[stopId] ?? []),
-            update,
-          ],
+          [stopId]: [...(result[stopId] ?? []), update],
         };
       }, {});
 
@@ -95,15 +106,35 @@ router.get('/data', async (req, res) => {
   }
 });
 
-router.get('/weather', async (req, res) => {
+router.get("/weather", async (req, res) => {
   try {
     const { lat, lon } = req.query;
     const response = await axios({
-      method: 'get',
-      url: `https://api.openweathermap.org/data/2.5/onecall`,
+      method: "get",
+      url: `https://api.openweathermap.org/data/2.5/weather`,
       params: {
         appid: process.env.WEATHER_API_KEY,
-        units: 'metric',
+        units: "metric",
+        lat,
+        lon,
+      },
+    });
+
+    return res.json(response.data);
+  } catch (error) {
+    return res.status(500).send({ error });
+  }
+});
+
+router.get("/forecast", async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    const response = await axios({
+      method: "get",
+      url: `https://api.openweathermap.org/data/2.5/forecast`,
+      params: {
+        appid: process.env.WEATHER_API_KEY,
+        units: "metric",
         lat,
         lon,
       },

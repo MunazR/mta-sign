@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import SectionHeader from "./SectionHeader";
 
+const REFRESH_RATE = 5 * 60 * 1000;
 const LAT = 40.7174923;
 const LON = -73.9848778;
 const WEEKDAY = [
@@ -18,7 +19,8 @@ const WEEKDAY = [
 const toPrettyCelsius = (temp) => `${Math.round(temp)}°`;
 
 const Weather = () => {
-  const [data, setData] = useState(null);
+  const [currentWeather, setCurrentWeather] = useState(null);
+  const [forecast, setCurrentForecast] = useState(null);
   const now = new Date();
   const nowUnix = now.valueOf() / 1000;
 
@@ -34,21 +36,36 @@ const Weather = () => {
         }
         return response.json();
       })
-      .then(setData)
+      .then(setCurrentWeather)
+      .catch(console.error);
+
+    fetch(
+      `http://localhost:3000/forecast?lat=${encodeURIComponent(
+        LAT
+      )}&lon=${encodeURIComponent(LON)}`
+    )
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(response.statusText);
+        }
+        return response.json();
+      })
+      .then(setCurrentForecast)
       .catch(console.error);
   };
 
   useEffect(() => {
     refreshData();
-    const interval = setInterval(refreshData, 5 * 60 * 1000);
+    const interval = setInterval(refreshData, REFRESH_RATE);
     return () => clearInterval(interval);
   }, []);
 
-  if (!data) {
+  if (!currentWeather || !forecast) {
     return null;
   }
 
-  const { current, hourly, daily } = data;
+  const hourly = [];
+  const daily = [];
 
   return (
     <>
@@ -57,28 +74,27 @@ const Weather = () => {
         <div className='Weather-box'>
           <div className='Weather-header'>Feels like</div>
           <div className='Weather-temp'>
-            {toPrettyCelsius(current["feels_like"])}
+            {toPrettyCelsius(currentWeather["main"]["feels_like"])}
           </div>
           <img
             className='Weather-icon'
-            src={`http://openweathermap.org/img/wn/${current["weather"][0]["icon"]}@2x.png`}
-            alt={current["weather"][0]["description"]}
+            src={`http://openweathermap.org/img/wn/${currentWeather["weather"][0]["icon"]}@2x.png`}
+            alt={currentWeather["weather"][0]["description"]}
           />
         </div>
-        {hourly
-          .filter((h) => h["dt"] > nowUnix)
-          .filter((h, i) => i % 3 === 0)
-          .slice(0, 5)
-          .map((hour) => {
-            const time = new Date(hour["dt"] * 1000).toLocaleTimeString([], {
+        {forecast["list"]
+          .filter((hourly) => hourly["dt"] > nowUnix)
+          .slice(1, 6)
+          .map((hourly) => {
+            const time = new Date(hourly["dt"] * 1000).toLocaleTimeString([], {
               timeStyle: "short",
             });
-            const weather = hour["weather"][0];
+            const weather = hourly["weather"][0];
             return (
-              <div key={hour["dt"]} className='Weather-box'>
+              <div key={hourly["dt"]} className='Weather-box'>
                 <div className='Weather-header'>{time}</div>
                 <div className='Weather-temp'>
-                  {toPrettyCelsius(hour["feels_like"])}
+                  {toPrettyCelsius(hourly["main"]["feels_like"])}
                 </div>
                 <img
                   className='Weather-icon'
